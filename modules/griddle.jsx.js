@@ -125,6 +125,7 @@ var Griddle = React.createClass({
             "isSubGriddle": false,
             "enableSort": true,
             "onRowClick": null,
+            "onColumnsChange": null,
             /* css class names */
             "sortAscendingClassName": "sort-ascending",
             "sortDescendingClassName": "sort-descending",
@@ -314,6 +315,9 @@ var Griddle = React.createClass({
         this.setState({
             filteredColumns: this.columnSettings.filteredColumns
         });
+        if (this.props.onColumnsChange) {
+            this.props.onColumnsChange(columns);
+        }
     },
     nextPage: function nextPage() {
         var currentPage = this.getCurrentPage();
