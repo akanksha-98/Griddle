@@ -126,7 +126,7 @@ var Griddle = React.createClass({
             "enableSort": true,
             "onRowClick": null,
             "onColumnsChange": null,
-            "onMaxPageChange": null,
+            "onPageSizeChange": null,
             /* css class names */
             "sortAscendingClassName": "sort-ascending",
             "sortDescendingClassName": "sort-descending",
@@ -248,6 +248,9 @@ var Griddle = React.createClass({
         //make this better.
         this.state.resultsPerPage = size;
         this.setMaxPage();
+        if (this.props.onPageSizeChange) {
+            this.props.onPageSizeChange(size);
+        }
     },
     toggleColumnChooser: function toggleColumnChooser() {
         this.setState({
@@ -280,9 +283,6 @@ var Griddle = React.createClass({
         var maxPage = this.getMaxPage(results);
         //re-render if we have new max page value
         if (this.state.maxPage !== maxPage) {
-            if (this.props.onMaxPageChange) {
-                this.props.onMaxPageChange(maxPage);
-            }
             this.setState({ page: 0, maxPage: maxPage, filteredColumns: this.columnSettings.filteredColumns });
         }
     },
