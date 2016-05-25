@@ -21,7 +21,8 @@ var CustomFilterContainer = React.createClass({
         changeFilter={this.props.changeFilter}
         results={this.props.results}
         currentResults={this.props.currentResults}
-        placeholderText={this.props.placeholderText} />;
+        placeholderText={this.props.placeholderText}
+        queryWord={this.props.queryWord} />;
   }
 });
 

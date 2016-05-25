@@ -127,6 +127,7 @@ var Griddle = React.createClass({
             "onRowClick": null,
             "onColumnsChange": null,
             "onPageSizeChange": null,
+            "queryWord": null,
             /* css class names */
             "sortAscendingClassName": "sort-ascending",
             "sortDescendingClassName": "sort-descending",
@@ -274,7 +275,7 @@ var Griddle = React.createClass({
         }
 
         if (!totalResults) {
-            totalResults = (results || this.getCurrentResults()).length;
+            totalResults = (results || this.getCurrentFilteredResults()).length;
         }
         var maxPage = Math.ceil(totalResults / this.state.resultsPerPage);
         return maxPage;
@@ -384,7 +385,7 @@ var Griddle = React.createClass({
         }
 
         if (nextProps.selectedRowIds) {
-            var visibleRows = this.getDataForRender(this.getCurrentResults(), this.columnSettings.getColumns(), true);
+            var visibleRows = this.getDataForRender(this.getCurrentFilteredResults(), this.columnSettings.getColumns(), true);
 
             this.setState({
                 isSelectAllChecked: this._getAreAllRowsChecked(nextProps.selectedRowIds, map(visibleRows, this.props.uniqueIdentifier)),
@@ -535,6 +536,17 @@ var Griddle = React.createClass({
     getCurrentResults: function getCurrentResults() {
         return this.state.filteredResults || this.props.results;
     },
+    getCurrentFilteredResults: function getCurrentFilteredResults() {
+        if (this.props.queryWord != null) {
+            if (this.props.useCustomFilterer) {
+                return this.props.customFilterer(this.props.results, this.props.queryWord);
+            } else {
+                return this.defaultFilter(this.props.results, this.props.queryWord);
+            }
+        } else {
+            return getCurrentResults();
+        }
+    },
     getCurrentPage: function getCurrentPage() {
         return this.props.externalCurrentPage || this.state.page;
     },
@@ -562,7 +574,7 @@ var Griddle = React.createClass({
         };
     },
     _toggleSelectAll: function _toggleSelectAll() {
-        var visibleRows = this.getDataForRender(this.getCurrentResults(), this.columnSettings.getColumns(), true),
+        var visibleRows = this.getDataForRender(this.getCurrentFilteredResults(), this.columnSettings.getColumns(), true),
             newIsSelectAllChecked = !this.state.isSelectAllChecked,
             newSelectedRowIds = JSON.parse(JSON.stringify(this.state.selectedRowIds));
 
@@ -578,7 +590,7 @@ var Griddle = React.createClass({
     },
     _toggleSelectRow: function _toggleSelectRow(row, isChecked) {
 
-        var visibleRows = this.getDataForRender(this.getCurrentResults(), this.columnSettings.getColumns(), true),
+        var visibleRows = this.getDataForRender(this.getCurrentFilteredResults(), this.columnSettings.getColumns(), true),
             newSelectedRowIds = JSON.parse(JSON.stringify(this.state.selectedRowIds));
 
         this._updateSelectedRowIds(row[this.props.uniqueIdentifier], newSelectedRowIds, isChecked);
@@ -691,7 +703,7 @@ var Griddle = React.createClass({
         };
     },
     getFilter: function getFilter() {
-        return this.props.showFilter && this.props.useCustomGridComponent === false ? this.props.useCustomFilterComponent ? React.createElement(CustomFilterContainer, { changeFilter: this.setFilter, placeholderText: this.props.filterPlaceholderText, customFilterComponent: this.props.customFilterComponent, results: this.props.results, currentResults: this.getCurrentResults() }) : React.createElement(GridFilter, { changeFilter: this.setFilter, placeholderText: this.props.filterPlaceholderText }) : "";
+        return this.props.showFilter && this.props.useCustomGridComponent === false ? this.props.useCustomFilterComponent ? React.createElement(CustomFilterContainer, { changeFilter: this.setFilter, placeholderText: this.props.filterPlaceholderText, customFilterComponent: this.props.customFilterComponent, results: this.props.results, currentResults: this.getCurrentFilteredResults(), queryWord: this.props.queryWord }) : React.createElement(GridFilter, { changeFilter: this.setFilter, placeholderText: this.props.filterPlaceholderText }) : "";
     },
     getSettings: function getSettings() {
         return this.props.showSettings ? React.createElement('button', { type: 'button', className: this.props.settingsToggleClassName, onClick: this.toggleColumnChooser,
@@ -797,7 +809,7 @@ var Griddle = React.createClass({
     },
     render: function render() {
         var that = this,
-            results = this.getCurrentResults(); // Attempt to assign to the filtered results, if we have any.
+            results = this.getCurrentFilteredResults(); // Attempt to assign to the filtered results, if we have any.
 
         var headerTableClassName = this.props.tableClassName + " table-header";
 
@@ -824,7 +836,7 @@ var Griddle = React.createClass({
 
         // Grab the current and max page values.
         var currentPage = this.getCurrentPage();
-        var maxPage = this.getCurrentMaxPage();
+        var maxPage = this.props.queryWord != null ? Math.floor((results.length - 1) / this.state.resultsPerPage) + 1 : this.getCurrentMaxPage();
 
         // Determine if we need to enable infinite scrolling on the table.
         var hasMorePages = currentPage + 1 < maxPage;
